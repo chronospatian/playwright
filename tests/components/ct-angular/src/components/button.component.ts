@@ -1,13 +1,13 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 @Component({
   standalone: true,
   selector: 'app-button',
   template: `
-  <button (click)="click.emit('hello')">{{title}}</button>
+  <button (click)="click.emit('hello')">{{title()}}</button>
   `
 })
 export class ButtonComponent {
-  @Input({required: true}) title!: string;
-  @Output('submit') click = new EventEmitter();
+  title = input()
+  click = output<string>({ alias: 'submit' })
 }

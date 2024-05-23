@@ -5,6 +5,7 @@ import { APP_INITIALIZER, inject } from '@angular/core';
 import { Router, provideRouter } from '@angular/router';
 import { afterMount, beforeMount } from '@playwright/experimental-ct-angular/hooks';
 import { BrowserPlatformLocation, PlatformLocation } from '@angular/common';
+import { ROOT_PROVIDERS } from '@/components/providers';
 
 export type HooksConfig = {
   routing?: boolean;
@@ -12,6 +13,10 @@ export type HooksConfig = {
 };
 
 beforeMount<HooksConfig>(async ({ hooksConfig, TestBed }) => {
+  TestBed.configureTestingModule({
+    providers: [ROOT_PROVIDERS]
+  })
+
   if (hooksConfig?.routing)
     TestBed.configureTestingModule({
       providers: [

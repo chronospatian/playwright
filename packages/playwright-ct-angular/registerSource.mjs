@@ -20,11 +20,7 @@
 /** @typedef {import('../playwright-ct-core/types/component').ObjectComponent} ObjectComponent */
 
 import 'zone.js';
-import {
-  Component,
-  EventEmitter,
-  reflectComponentType
-} from '@angular/core';
+import { Component, EventEmitter, NgModule, reflectComponentType, isSignal } from '@angular/core';
 import { getTestBed, TestBed } from '@angular/core/testing';
 import { BrowserDynamicTestingModule, platformBrowserDynamicTesting, } from '@angular/platform-browser-dynamic/testing';
 
@@ -157,6 +153,59 @@ function __pwUpdateEvents(fixture, events = {}) {
   __pwOutputSubscriptionRegistry.set(fixture, outputSubscriptionRecord);
 }
 
+
+function __mergeStoryConfig(target) {
+  target = {...target}
+  for (let source of target.extends ?? []) {
+    source = __mergeStoryConfig(source)
+    target.imports = [source.imports ?? [], target.imports ?? []]
+    target.providers = [source.providers ?? [], target.providers ?? []]
+    target.on = Array.from(new Set([...source.on ?? [], ...target.on ?? []]))
+    target.props = { ...source.props, ...target.props }
+  }
+  return target
+}
+
+async function __pwConfigureStory(component) {
+  const { imports = [], providers, template, props = {}, on = [] } = __mergeStoryConfig(component.type)
+
+  const TestModule = NgModule({
+    providers,
+  })(class TestModule {})
+
+  const inputs = Object.keys(props)
+
+  component.type = Component({
+    standalone: true,
+    imports: [TestModule, imports],
+    template,
+    inputs: inputs,
+    outputs: on
+  })(
+    class TestStory {
+      constructor() {
+        for (const key of inputs) {
+          if (isSignal(this[key])) {
+            this[key].set(props[key])
+          } else {
+            Object.defineProperty(this, key, {
+              value: props[key],
+              enumerable: true,
+              writable: true
+            })
+          }
+        }
+        for (const key of on) {
+          if (Object.hasOwn(this, key)) continue
+          Object.defineProperty(this, key, {
+            value: new EventEmitter(),
+            enumerable: true
+          })
+        }
+      }
+    })
+}
+
 window.playwrightMount = async (component, rootElement, hooksConfig) => {
   if (component.__pw_type === 'jsx')
     throw new Error('JSX mount notation is not supported');
@@ -164,10 +213,15 @@ window.playwrightMount = async (component, rootElement, hooksConfig) => {
   for (const hook of window.__pw_hooks_before_mount || [])
     await hook({ hooksConfig, TestBed });
 
+  const isStory = typeof component.type === "object" && component.type !== null
   const isTemplate = typeof component.type === "string"
 
   if (isTemplate) {
     __pwConfigureTemplate(component)
+  }
+
+  if (isStory) {
+    await __pwConfigureStory(component)
   }
 
   await __pwConfigureComponent(component, isTemplate)

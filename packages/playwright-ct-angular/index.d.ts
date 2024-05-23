@@ -17,7 +17,7 @@
 import type { Locator } from 'playwright/test';
 import type { JsonObject } from '@playwright/experimental-ct-core/types/component';
 import type { TestType } from '@playwright/experimental-ct-core';
-import type { EnvironmentProviders, Provider, Type } from '@angular/core';
+import type { EnvironmentProviders, InputSignal, Provider, Signal, Type } from '@angular/core';
 
 export type ComponentEvents = Record<string, Function>;
 
@@ -31,20 +31,35 @@ export interface MountOptions<HooksConfig extends JsonObject, Component> {
   viewProviders?: Provider[]
 }
 
+type UnwrapSignalInputs<T> = {
+  [key in keyof T]: T[key] extends InputSignal<infer R> ? R : T[key]
+}
+
 export interface MountResult<Component> extends Locator {
   unmount(): Promise<void>;
   update(options: {
-    props?: Partial<Component>,
+    props?: Partial<UnwrapSignalInputs<Component>>,
     on?: Partial<ComponentEvents>,
   }): Promise<void>;
 }
 
 export const test: TestType<{
   mount<HooksConfig extends JsonObject, Component = unknown>(
-    component: Type<Component> | string,
+    component: Type<Component> | string | StoryObject,
     options?: MountOptions<HooksConfig, Component>
   ): Promise<MountResult<Component>>;
 }>;
 
 export { defineConfig, PlaywrightTestConfig } from '@playwright/experimental-ct-core';
 export { expect, devices } from 'playwright/test';
+
+export interface StoryObject {
+  template: string
+  extends?: StoryObject[]
+  props?: {
+    [key: string]: any
+  }
+  on?: string[]
+  imports?: any[]
+  providers?: any[]
+}
