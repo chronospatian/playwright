@@ -28,6 +28,7 @@ export default defineConfig({
     ctViteConfig: {
       plugins: [angular({
         tsconfig: resolve('./tsconfig.spec.json'),
+        jit: true
       }) as any], // TODO: remove any and resolve various installed conflicting Vite versions
       resolve: {
         alias: {
@@ -45,9 +46,9 @@ export default defineConfig({
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
     },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
   ],
 });

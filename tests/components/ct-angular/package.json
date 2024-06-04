@@ -29,5 +29,6 @@
     "@angular/cli": "17.3.7",
     "@angular/compiler-cli": "17.3.8",
     "typescript": "5.4.3"
-  }
+  },
+  "type": "module"
 }

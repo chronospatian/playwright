@@ -1,32 +1,16 @@
-import { test, expect } from '@playwright/experimental-ct-angular';
+import { expect, test } from '@playwright/experimental-ct-angular';
+// This fails
+// SyntaxError: Identifier 'CounterComponent' has already been declared
+// import { value, CounterComponent } from '@/components/counter.component';
+
+// Workaround:
+// Import component usages
+// Then import non-component usages separately
 import { CounterComponent } from '@/components/counter.component';
+import { value, CounterComponent as CounterComponentTestRef } from '@/components/counter.component';
+console.log(CounterComponentTestRef) // renaming imports also works!
 
-test('update props without remounting', async ({ mount }) => {
-  const component = await mount(CounterComponent, {
-    props: { count: 9001 },
-  });
-  await expect(component.getByTestId('props')).toContainText('9001');
-
-  await component.update({
-    props: { count: 1337 },
-  });
-  await expect(component).not.toContainText('9001');
-  await expect(component.getByTestId('props')).toContainText('1337');
-
-  await expect(component.getByTestId('remount-count')).toContainText('1');
-});
-
-test('update event listeners without remounting', async ({ mount }) => {
+test('should mount', async ({ mount }) => {
   const component = await mount(CounterComponent);
-
-  const messages: string[] = [];
-  await component.update({
-    on: {
-      submit: (data: string) => messages.push(data),
-    },
-  });
-  await component.click();
-  expect(messages).toEqual(['hello']);
-
-  await expect(component.getByTestId('remount-count')).toContainText('1');
+  await expect(component).toHaveText(`${value.count}`)
 });

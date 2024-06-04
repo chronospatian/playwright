@@ -1,23 +1,17 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   standalone: true,
   template: `
-    <div (click)="submit.emit('hello')">
-      <div data-testid="props">{{ count }}</div>
-      <div data-testid="remount-count">{{ this.remountCount }}</div>
-      <ng-content select="[main]"></ng-content>
-      <ng-content></ng-content>
-    </div>
+    {{ value.count }}
   `,
 })
 export class CounterComponent {
-  remountCount = Number(localStorage.getItem('remountCount'));
-  @Input() count!: number;
+  value = value
 
-  @Output() submit = new EventEmitter();
-
-  constructor() {
-    localStorage.setItem('remountCount', String(this.remountCount++))
-  }
 }
+
+export const value = {
+  count: 10
+}
+
